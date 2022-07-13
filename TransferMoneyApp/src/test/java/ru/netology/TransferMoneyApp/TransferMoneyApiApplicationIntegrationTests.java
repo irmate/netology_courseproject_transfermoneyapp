@@ -16,14 +16,13 @@ import ru.netology.TransferMoneyApp.schemas.errors.ErrorInputData;
 import ru.netology.TransferMoneyApp.schemas.errors.ErrorTransfer;
 import ru.netology.TransferMoneyApp.schemas.data.Amount;
 import ru.netology.TransferMoneyApp.schemas.data.TransferRequest;
-import ru.netology.TransferMoneyApp.schemas.sucsess.SuccessConfirmation;
-import ru.netology.TransferMoneyApp.schemas.sucsess.SuccessTransfer;
+import ru.netology.TransferMoneyApp.schemas.succsess.SuccessConfirmation;
+import ru.netology.TransferMoneyApp.schemas.succsess.SuccessTransfer;
 
 import java.nio.file.Paths;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -42,12 +41,12 @@ public class TransferMoneyApiApplicationIntegrationTests {
     void transferMoneyCardToCard200Test() {
         final String HOST = "http://localhost:";
         var testRequest = new TransferRequest();
-        testRequest.setCardFromNumber("1111111111111111");
+        testRequest.setCardFromNumber("2222222222222222");
         testRequest.setCardFromValidTill("09/24");
         testRequest.setCardFromCVV("232");
-        testRequest.setCardToNumber("2222222222222222");
+        testRequest.setCardToNumber("3333333333333333");
         testRequest.setAmount(new Amount());
-        testRequest.getAmount().setValue(4000);
+        testRequest.getAmount().setValue(500);
         testRequest.getAmount().setCurrency("RUR");
 
         ResponseEntity<SuccessTransfer> forEntity = restTemplate.postForEntity(
@@ -56,17 +55,16 @@ public class TransferMoneyApiApplicationIntegrationTests {
                 SuccessTransfer.class);
 
         assertThat(forEntity.getStatusCode(), is(HttpStatus.OK));
-        assertNotNull(forEntity.getBody());
     }
 
     @Test
     void transferMoneyCardToCard400Test() {
         final String HOST = "http://localhost:";
         var testRequest = new TransferRequest();
-        testRequest.setCardFromNumber("1111111111111111");
+        testRequest.setCardFromNumber("2222222222222222");
         testRequest.setCardFromValidTill("55/24");
         testRequest.setCardFromCVV("232");
-        testRequest.setCardToNumber("2222222222222222");
+        testRequest.setCardToNumber("3333333333333333");
         testRequest.setAmount(new Amount());
         testRequest.getAmount().setValue(4000);
         testRequest.getAmount().setCurrency("RUR");
@@ -77,7 +75,6 @@ public class TransferMoneyApiApplicationIntegrationTests {
                 ErrorInputData.class);
 
         assertThat(forEntity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
-        assertNotNull(forEntity.getBody());
     }
 
     @Test
@@ -90,23 +87,36 @@ public class TransferMoneyApiApplicationIntegrationTests {
                 ErrorTransfer.class);
 
         assertThat(forEntity.getStatusCode(), is(HttpStatus.INTERNAL_SERVER_ERROR));
-        assertNotNull(forEntity.getBody());
     }
 
     @Test
     void confirmOperation200Test() {
         final String HOST = "http://localhost:";
+        var confirmRequest = new ConfirmRequest();
+        confirmRequest.setOperationId("333433");
+        confirmRequest.setCode("0000");
+
+        ResponseEntity<SuccessConfirmation> forEntity = restTemplate.postForEntity(
+                HOST + container.getMappedPort(5500) + "/confirmOperation",
+                confirmRequest,
+                SuccessConfirmation.class);
+
+        assertThat(forEntity.getStatusCode(), is(HttpStatus.OK));
+    }
+
+    @Test
+    void confirmOperation400Test(){
+        final String HOST = "http://localhost:";
         var testRequest = new ConfirmRequest();
         testRequest.setOperationId("333433");
-        testRequest.setCode("1234");
+        testRequest.setCode("4444");
 
         ResponseEntity<SuccessConfirmation> forEntity = restTemplate.postForEntity(
                 HOST + container.getMappedPort(5500) + "/confirmOperation",
                 testRequest,
                 SuccessConfirmation.class);
 
-        assertThat(forEntity.getStatusCode(), is(HttpStatus.OK));
-        assertNotNull(forEntity.getBody());
+        assertThat(forEntity.getStatusCode(), is(HttpStatus.BAD_REQUEST));
     }
 
     @Test
@@ -119,6 +129,5 @@ public class TransferMoneyApiApplicationIntegrationTests {
                 SuccessConfirmation.class);
 
         assertThat(forEntity.getStatusCode(), is(HttpStatus.INTERNAL_SERVER_ERROR));
-        assertNotNull(forEntity.getBody());
     }
 }
